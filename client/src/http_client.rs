@@ -47,7 +47,6 @@ impl ImmuxDBClient<HttpClientResult> for ImmuxDBHttpClient {
             .collect::<Vec<String>>()
             .join("\r\n");
 
-
         let mut response = self.client.delete(&url).body(grouping_names).send()?;
         let status_code = response.status();
 

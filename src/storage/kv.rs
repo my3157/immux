@@ -33,22 +33,33 @@ impl LogKeyValueStore {
         let db_version_minor_str = env!("CARGO_PKG_VERSION_MINOR");
         let db_version_revise_str = env!("CARGO_PKG_VERSION_PATCH");
 
-        let db_version = vec![db_version_major_str, db_version_minor_str, db_version_revise_str];
+        let db_version = vec![
+            db_version_major_str,
+            db_version_minor_str,
+            db_version_revise_str,
+        ];
 
         let db_version = LogVersion::try_from(&db_version)?;
 
         let writer = LogWriter::new(&log_file_path, preferences.ecc_mode, db_version)?;
         let mut reader = LogReader::new(&log_file_path, db_version)?;
-        let (key_pointer_map, current_height, transaction_manager) =
+        let (key_pointer_map, current_height, incomplete_transaction_manager) =
             load_key_pointer_map(&mut reader, None)?;
 
-        let engine = LogKeyValueStore {
+        let mut incomplete_transaction_ids =
+            incomplete_transaction_manager.get_current_active_transaction_ids();
+
+        let mut engine = LogKeyValueStore {
             reader,
             writer,
             key_pointer_map,
             current_height,
-            transaction_manager,
+            transaction_manager: incomplete_transaction_manager,
         };
+
+        for transaction_id in incomplete_transaction_ids.iter_mut() {
+            engine.abort_transaction(transaction_id)?;
+        }
 
         return Ok(engine);
     }
@@ -377,17 +388,19 @@ impl LogKeyValueStore {
         return Ok(());
     }
 
-    pub fn abort_transaction(&mut self, transaction_id: TransactionId) -> KVResult<()> {
+    pub fn abort_transaction(&mut self, transaction_id: &mut TransactionId) -> KVResult<()> {
         self.transaction_manager
             .validate_transaction_id(&transaction_id)?;
 
-        let instruction = Instruction::TransactionAbort { transaction_id };
+        let instruction = Instruction::TransactionAbort {
+            transaction_id: *transaction_id,
+        };
         self.writer.append_instruction(&instruction)?;
 
         update_aborted_log_pointers(
             &mut self.transaction_manager,
             &mut self.key_pointer_map,
-            transaction_id,
+            *transaction_id,
         );
 
         self.current_height.increment()?;
