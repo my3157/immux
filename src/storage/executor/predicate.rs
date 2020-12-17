@@ -45,6 +45,22 @@ pub enum PredicateError {
     UnitContent(UnitContentError),
 }
 
+impl PredicateError {
+    pub fn marshal(&self) -> Vec<u8> {
+        unimplemented!();
+    }
+
+    pub fn parse(data: &[u8]) -> Result<(Self, usize), PredicateError> {
+        unimplemented!();
+    }
+}
+
+impl fmt::Display for PredicateError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+    }
+}
+
 impl From<VarIntError> for PredicateError {
     fn from(err: VarIntError) -> Self {
         Self::MalformedBytes(err)

@@ -49,8 +49,8 @@ impl UrlInformation {
 fn spawn_db_thread(
     preferences: &DBPreferences,
     server_db_receiver: Receiver<AnnotatedCommand>,
-    db_http_sender: Sender<Outcome>,
-    db_tcp_sender: Sender<Outcome>,
+    db_http_sender: Sender<ServerResult<Outcome>>,
+    db_tcp_sender: Sender<ServerResult<Outcome>>,
 ) -> JoinHandle<ServerResult<()>> {
     let preferences = preferences.to_owned();
     thread::spawn(move || -> ServerResult<()> {
@@ -60,17 +60,14 @@ fn spawn_db_thread(
             let message = server_db_receiver.recv()?;
             let received_command = message.command;
 
-            let outcome = match handle_command(received_command, &mut executor) {
-                Ok(outcome) => outcome,
-                Err(_error) => Outcome::ServerError,
-            };
+            let response = handle_command(received_command, &mut executor);
 
             match message.sender {
                 AnnotatedCommandSender::HTTP => {
-                    db_http_sender.send(outcome)?;
+                    db_http_sender.send(response)?;
                 }
                 AnnotatedCommandSender::TCP => {
-                    db_tcp_sender.send(outcome)?;
+                    db_tcp_sender.send(response)?;
                 }
             }
         }
@@ -79,8 +76,8 @@ fn spawn_db_thread(
 
 pub fn run_db_servers(prefs: &DBPreferences) -> Vec<ServerResult<()>> {
     let (server_db_sender, server_db_receiver) = mpsc::channel::<AnnotatedCommand>();
-    let (db_http_sender, db_http_receiver) = mpsc::channel::<Outcome>();
-    let (db_tcp_sender, db_tcp_receiver) = mpsc::channel::<Outcome>();
+    let (db_http_sender, db_http_receiver) = mpsc::channel::<ServerResult<Outcome>>();
+    let (db_tcp_sender, db_tcp_receiver) = mpsc::channel::<ServerResult<Outcome>>();
 
     let mut handles = vec![];
 
@@ -111,7 +108,7 @@ pub fn run_db_servers(prefs: &DBPreferences) -> Vec<ServerResult<()>> {
 pub fn run_http_server(
     http_port: u16,
     server_db_sender: Sender<AnnotatedCommand>,
-    db_http_receiver: Receiver<Outcome>,
+    db_http_receiver: Receiver<ServerResult<Outcome>>,
 ) -> JoinHandle<ServerResult<()>> {
     let http_address = format!("{}:{}", Constants::SERVER_END_POINT, http_port);
 
@@ -123,65 +120,73 @@ pub fn run_http_server(
                     let message = AnnotatedCommand::new(command, AnnotatedCommandSender::HTTP);
                     server_db_sender.send(message)?;
 
-                    let outcome = db_http_receiver.recv()?;
+                    match db_http_receiver.recv()? {
+                        Ok(outcome) => {
+                            let (status, body): (u16, String) = match outcome {
+                                Outcome::Select(outcome) => {
+                                    let outcome_string_vec: Vec<String> = outcome
+                                        .iter()
+                                        .map(|unit_content| unit_content.to_string())
+                                        .collect();
+                                    let body = outcome_string_vec.join("\r\n");
+                                    (200, body)
+                                }
+                                Outcome::InspectOne(outcome) => {
+                                    let mut body = String::new();
+                                    for (command, height) in outcome {
+                                        body += &command.to_string();
+                                        body += "\t";
+                                        body += &format!("height: {:?}", height);
+                                        body += "\r\n";
+                                    }
+                                    (200, body)
+                                }
+                                Outcome::InspectAll(outcome) => {
+                                    let mut body = String::new();
+                                    for (command, height) in outcome {
+                                        body += &command.to_string();
+                                        body += "\t";
+                                        body += &format!("height: {:?}", height);
+                                        body += "\r\n";
+                                    }
+                                    (200, body)
+                                }
+                                Outcome::CreateTransaction(transaction_id) => {
+                                    let body = transaction_id.as_u64().to_string();
+                                    (200, body)
+                                }
+                                Outcome::GetAllGroupingsSuccess(groupings) => {
+                                    let outcome_string_vec: Vec<String> = groupings
+                                        .iter()
+                                        .map(|grouping| grouping.to_string())
+                                        .collect();
+                                    let body = outcome_string_vec.join("\r\n");
+                                    (200, body)
+                                }
+                                _ => (200, String::from("Unspecified outcome")),
+                            };
 
-                    let (status, body): (u16, String) = match outcome {
-                        Outcome::Select(outcome) => {
-                            let outcome_string_vec: Vec<String> = outcome
-                                .iter()
-                                .map(|unit_content| unit_content.to_string())
-                                .collect();
-                            let body = outcome_string_vec.join("\r\n");
-                            (200, body)
-                        }
-                        Outcome::InspectOne(outcome) => {
-                            let mut body = String::new();
-                            for (command, height) in outcome {
-                                body += &command.to_string();
-                                body += "\t";
-                                body += &format!("height: {:?}", height);
-                                body += "\r\n";
+                            let response = if body.is_empty() {
+                                Response::from_string(UnitContent::Nil.to_string())
+                                    .with_status_code(status)
+                            } else {
+                                Response::from_string(body).with_status_code(status)
+                            };
+
+                            match request.respond(response) {
+                                Ok(_) => {}
+                                Err(error) => return Err(ServerError::HttpResponseError(error)),
                             }
-                            (200, body)
                         }
-                        Outcome::InspectAll(outcome) => {
-                            let mut body = String::new();
-                            for (command, height) in outcome {
-                                body += &command.to_string();
-                                body += "\t";
-                                body += &format!("height: {:?}", height);
-                                body += "\r\n";
+                        Err(error) => {
+                            let status = 500;
+                            let body = format!("{}", error);
+                            let response = Response::from_string(body).with_status_code(status);
+                            match request.respond(response) {
+                                Ok(_) => {}
+                                Err(error) => return Err(ServerError::HttpResponseError(error)),
                             }
-                            (200, body)
                         }
-                        Outcome::CreateTransaction(transaction_id) => {
-                            let body = transaction_id.as_u64().to_string();
-                            (200, body)
-                        }
-                        Outcome::GetAllGroupingsSuccess(groupings) => {
-                            let outcome_string_vec: Vec<String> = groupings
-                                .iter()
-                                .map(|grouping| grouping.to_string())
-                                .collect();
-                            let body = outcome_string_vec.join("\r\n");
-                            (200, body)
-                        }
-                        Outcome::ServerError => {
-                            let body = Outcome::ServerError.to_string();
-                            (200, body)
-                        }
-                        _ => (200, String::from("Unspecified outcome")),
-                    };
-
-                    let response = if body.is_empty() {
-                        Response::from_string(UnitContent::Nil.to_string()).with_status_code(status)
-                    } else {
-                        Response::from_string(body).with_status_code(status)
-                    };
-
-                    match request.respond(response) {
-                        Ok(_) => {}
-                        Err(error) => return Err(ServerError::HttpResponseError(error)),
                     }
                 }
             }
@@ -194,7 +199,7 @@ pub fn run_http_server(
 fn run_tcp_server(
     tcp_port: u16,
     server_db_sender: Sender<AnnotatedCommand>,
-    db_tcp_receiver: Receiver<Outcome>,
+    db_tcp_receiver: Receiver<ServerResult<Outcome>>,
 ) -> JoinHandle<ServerResult<()>> {
     let tcp_address = format!("{}:{}", Constants::SERVER_END_POINT, tcp_port);
     let listener = TcpListener::bind(tcp_address).unwrap();
@@ -210,10 +215,12 @@ fn run_tcp_server(
                 let message = AnnotatedCommand::new(command, AnnotatedCommandSender::TCP);
                 server_db_sender.send(message)?;
 
-                let outcome = db_tcp_receiver.recv()?;
-                let outcome_bytes = outcome.marshal();
+                let response_bytes = match db_tcp_receiver.recv()? {
+                    Ok(outcome) => outcome.marshal(),
+                    Err(error) => error.marshal(),
+                };
 
-                stream.write(&outcome_bytes)?;
+                stream.write(&response_bytes)?;
                 stream.flush().unwrap();
             }
         }

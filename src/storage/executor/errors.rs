@@ -18,6 +18,16 @@ pub enum ExecutorError {
     UnexpectedOutcome,
 }
 
+impl ExecutorError {
+    pub fn marshal(&self) -> Vec<u8> {
+        unimplemented!();
+    }
+
+    pub fn parse(data: &[u8]) -> Result<(Self, usize), ExecutorError> {
+        unimplemented!()
+    }
+}
+
 impl From<KVError> for ExecutorError {
     fn from(err: KVError) -> ExecutorError {
         ExecutorError::KVError(err)
@@ -62,7 +72,7 @@ impl std::error::Error for ExecutorError {
 
 impl std::fmt::Display for ExecutorError {
     fn fmt(&self, _f: &mut Formatter) -> Result<(), std::fmt::Error> {
-        return Ok(());
+        unimplemented!();
     }
 }
 

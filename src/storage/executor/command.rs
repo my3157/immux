@@ -1,5 +1,6 @@
 use std::convert::TryFrom;
 use std::string::FromUtf8Error;
+use std::fmt;
 
 use crate::storage::chain_height::ChainHeight;
 use crate::storage::executor::grouping_label::{GroupingLabel, GroupingLabelError};
@@ -19,6 +20,22 @@ pub enum CommandError {
     SelectConditionErr(SelectConditionError),
     UnitKeyError(UnitKeyError),
     VarIntError(VarIntError),
+}
+
+impl CommandError {
+    pub fn marshal(&self) -> Vec<u8> {
+        unimplemented!();
+    }
+
+    pub fn parse(data: &[u8]) -> Result<(Self, usize), CommandError> {
+        unimplemented!();
+    }
+}
+
+impl fmt::Display for CommandError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+    }
 }
 
 impl From<GroupingLabelError> for CommandError {
