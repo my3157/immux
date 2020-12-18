@@ -41,10 +41,18 @@ pub enum TransactionManagerError {
 
 impl fmt::Display for TransactionManagerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
-        // match self {
-        //
-        // }
+        match self {
+            TransactionManagerError::TransactionIdOutOfRange => write!(
+                f,
+                "{}",
+                "TransactionManagerError::TransactionIdOutOfRange".to_string()
+            ),
+            TransactionManagerError::TransactionNotAlive => write!(
+                f,
+                "{}",
+                "TransactionManagerError::TransactionNotAlive".to_string()
+            ),
+        }
     }
 }
 

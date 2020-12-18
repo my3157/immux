@@ -11,7 +11,17 @@ pub enum KVKeyError {
 
 impl fmt::Display for KVKeyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
+        match self {
+            KVKeyError::VarIntError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "KVKeyError::VarIntError".to_string(),
+                    error_string
+                )
+            }
+        }
     }
 }
 

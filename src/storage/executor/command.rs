@@ -22,9 +22,76 @@ pub enum CommandError {
     VarIntError(VarIntError),
 }
 
+#[derive(Debug)]
+pub enum CommandErrorPrefix {
+    GroupingErr = 0x01,
+    UnitContentErr = 0x02,
+    InvalidPrefix = 0x03,
+    SelectConditionErr = 0x04,
+    UnitKeyError = 0x05,
+    VarIntError = 0x06,
+}
+
 impl CommandError {
     pub fn marshal(&self) -> Vec<u8> {
-        unimplemented!();
+        match self {
+            CommandError::GroupingErr(error) => {
+                let mut result = vec![CommandErrorPrefix::GroupingErr as u8];
+
+                let error_bytes = error.to_string().as_bytes().to_vec();
+                let error_bytes_length = error_bytes.len();
+                let length_bytes = varint_encode(error_bytes_length as u64);
+
+                result.extend_from_slice(&length_bytes);
+                result.extend_from_slice(&error_bytes);
+                return result;
+            }
+            CommandError::UnitContentErr(error) => {
+                let mut result = vec![CommandErrorPrefix::UnitContentErr as u8];
+
+                let error_bytes = error.to_string().as_bytes().to_vec();
+                let error_bytes_length = error_bytes.len();
+                let length_bytes = varint_encode(error_bytes_length as u64);
+
+                result.extend_from_slice(&length_bytes);
+                result.extend_from_slice(&error_bytes);
+                return result;
+            }
+            CommandError::InvalidPrefix => vec![CommandErrorPrefix::InvalidPrefix as u8],
+            CommandError::SelectConditionErr(error) => {
+                let mut result = vec![CommandErrorPrefix::SelectConditionErr as u8];
+
+                let error_bytes = error.to_string().as_bytes().to_vec();
+                let error_bytes_length = error_bytes.len();
+                let length_bytes = varint_encode(error_bytes_length as u64);
+
+                result.extend_from_slice(&length_bytes);
+                result.extend_from_slice(&error_bytes);
+                return result;
+            }
+            CommandError::UnitKeyError(error) => {
+                let mut result = vec![CommandErrorPrefix::UnitKeyError as u8];
+
+                let error_bytes = error.to_string().as_bytes().to_vec();
+                let error_bytes_length = error_bytes.len();
+                let length_bytes = varint_encode(error_bytes_length as u64);
+
+                result.extend_from_slice(&length_bytes);
+                result.extend_from_slice(&error_bytes);
+                return result;
+            }
+            CommandError::VarIntError(error) => {
+                let mut result = vec![CommandErrorPrefix::VarIntError as u8];
+
+                let error_bytes = error.to_string().as_bytes().to_vec();
+                let error_bytes_length = error_bytes.len();
+                let length_bytes = varint_encode(error_bytes_length as u64);
+
+                result.extend_from_slice(&length_bytes);
+                result.extend_from_slice(&error_bytes);
+                return result;
+            }
+        }
     }
 
     pub fn parse(data: &[u8]) -> Result<(Self, usize), CommandError> {
@@ -35,6 +102,17 @@ impl CommandError {
 impl fmt::Display for CommandError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         unimplemented!();
+        // match self {
+        //     CommandError::GroupingErr(error) => {
+        //         let error_string = error.to_string();
+        //         write!(f, "{}::{}", "CommandError::GroupingErr".to_string(), error_string)
+        //     }
+        //     CommandError::UnitContentErr(error),
+        //     CommandError::InvalidPrefix,
+        //     CommandError::SelectConditionErr(error),
+        //     CommandError::UnitKeyError(error),
+        //     CommandError::VarIntError(error),
+        // }
     }
 }
 
@@ -92,6 +170,12 @@ pub enum SelectConditionError {
     FromUtf8Error(FromUtf8Error),
     PredicateError(PredicateError),
     GroupingError(GroupingLabelError),
+}
+
+impl fmt::Display for SelectConditionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+    }
 }
 
 impl From<FromUtf8Error> for SelectConditionError {

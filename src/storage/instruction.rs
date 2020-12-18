@@ -26,10 +26,69 @@ pub enum InstructionError {
 
 impl fmt::Display for InstructionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
-        // match self {
-        //
-        // }
+        match self {
+            InstructionError::MissingPrefixByte => {
+                write!(f, "{}", "InstructionError::MissingPrefixByte".to_string())
+            }
+            InstructionError::KeyExceedsMaxLength => {
+                write!(f, "{}", "InstructionError::KeyExceedsMaxLength".to_string())
+            }
+            InstructionError::VarIntError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "InstructionError::KeyExceedsMaxLength".to_string(),
+                    error_string
+                )
+            }
+            InstructionError::UnknownPrefix(byte) => write!(
+                f,
+                "{}::{}",
+                "InstructionError::KeyExceedsMaxLength".to_string(),
+                byte
+            ),
+            InstructionError::PackTooShort(size) => write!(
+                f,
+                "{}::{}",
+                "InstructionError::KeyExceedsMaxLength".to_string(),
+                size
+            ),
+            InstructionError::UnexpectedMagicNumber(numbers) => {
+                let numbers_string = numbers
+                    .iter()
+                    .map(|number| format!("{}", number))
+                    .collect::<Vec<String>>()
+                    .join(",");
+                write!(
+                    f,
+                    "{}::{}",
+                    "InstructionError::KeyExceedsMaxLength".to_string(),
+                    numbers_string
+                )
+            }
+            InstructionError::UnexpectedPackVersion(byte) => write!(
+                f,
+                "{}::{}",
+                "InstructionError::KeyExceedsMaxLength".to_string(),
+                byte
+            ),
+            InstructionError::ErrorCorrection(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "InstructionError::KeyExceedsMaxLength".to_string(),
+                    error_string
+                )
+            }
+            InstructionError::UnexpectedECCMode(byte) => write!(
+                f,
+                "{}::{}",
+                "InstructionError::KeyExceedsMaxLength".to_string(),
+                byte
+            ),
+        }
     }
 }
 

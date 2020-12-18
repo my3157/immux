@@ -1,8 +1,16 @@
+use std::fmt;
+
 use crate::utils::varint::{varint_decode, varint_encode, VarIntError};
 
 #[derive(Debug)]
 pub enum UnitKeyError {
     VarIntError(VarIntError),
+}
+
+impl fmt::Display for UnitKeyError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+    }
 }
 
 impl From<VarIntError> for UnitKeyError {

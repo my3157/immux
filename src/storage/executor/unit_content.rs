@@ -57,7 +57,27 @@ pub enum UnitContentError {
 
 impl fmt::Display for UnitContentError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
+        match self {
+            UnitContentError::UnexpectedTypePrefix(byte) => write!(
+                f,
+                "{}::{}",
+                "UnitContentError::UnexpectedTypePrefix".to_string(),
+                byte
+            ),
+            UnitContentError::EmptyInput => write!(
+                f,
+                "{}",
+                "UnitContentError::UnexpectedTypePrefix".to_string()
+            ),
+            UnitContentError::MissingDataBytes => {
+                write!(f, "{}", "UnitContentError::MissingDataBytes".to_string())
+            }
+            UnitContentError::UnexpectedLengthBytes => write!(
+                f,
+                "{}",
+                "UnitContentError::UnexpectedLengthBytes".to_string()
+            ),
+        }
     }
 }
 

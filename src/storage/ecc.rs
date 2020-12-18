@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::utils::ints::{get_bit_u8, set_bit_u8};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -9,6 +11,19 @@ pub enum ECCMode {
 #[derive(Debug)]
 pub enum ErrorCorrectionError {
     DataWidthNotDivisibleByModulus(usize),
+}
+
+impl fmt::Display for ErrorCorrectionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ErrorCorrectionError::DataWidthNotDivisibleByModulus(size) => write!(
+                f,
+                "{}::{}",
+                "ErrorCorrectionError::DataWidthNotDivisibleByModulus".to_string(),
+                size
+            ),
+        }
+    }
 }
 
 pub trait ErrorCorrectionCodec {

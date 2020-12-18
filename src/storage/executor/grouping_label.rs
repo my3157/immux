@@ -12,6 +12,12 @@ impl From<VarIntError> for GroupingLabelError {
     }
 }
 
+impl fmt::Display for GroupingLabelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct GroupingLabel(Vec<u8>);
 

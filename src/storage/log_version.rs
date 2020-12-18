@@ -96,10 +96,28 @@ pub enum LogVersionError {
 
 impl fmt::Display for LogVersionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
-        // match self {
-        //
-        // }
+        match self {
+            LogVersionError::LogVersionParsingError => write!(
+                f,
+                "{}",
+                "LogVersionError::LogVersionParsingError".to_string()
+            ),
+            LogVersionError::InvalidString => {
+                write!(f, "{}", "LogVersionError::InvalidString".to_string())
+            }
+            LogVersionError::ParseIntError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "LogVersionError::ParseIntError".to_string(),
+                    error_string
+                )
+            }
+            LogVersionError::UnexpectedLogVersion => {
+                write!(f, "{}", "LogVersionError::UnexpectedLogVersion".to_string())
+            }
+        }
     }
 }
 
