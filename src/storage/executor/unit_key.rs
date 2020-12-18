@@ -9,7 +9,17 @@ pub enum UnitKeyError {
 
 impl fmt::Display for UnitKeyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
+        match self {
+            UnitKeyError::VarIntError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "UnitKeyError::VarIntError".to_string(),
+                    error_string
+                )
+            }
+        }
     }
 }
 

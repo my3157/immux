@@ -14,7 +14,12 @@ impl From<VarIntError> for GroupingLabelError {
 
 impl fmt::Display for GroupingLabelError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
+        match self {
+            GroupingLabelError::VarInt(error) => {
+                let error_string = error.to_string();
+                write!(f, "{}::{}", "GroupingLabelError::VarInt".to_string(), error_string)
+            }
+        }
     }
 }
 

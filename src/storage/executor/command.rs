@@ -20,6 +20,7 @@ pub enum CommandError {
     SelectConditionErr(SelectConditionError),
     UnitKeyError(UnitKeyError),
     VarIntError(VarIntError),
+    ParseCommandErrorToStringError,
 }
 
 #[derive(Debug)]
@@ -30,6 +31,7 @@ pub enum CommandErrorPrefix {
     SelectConditionErr = 0x04,
     UnitKeyError = 0x05,
     VarIntError = 0x06,
+    ParseCommandErrorToStringError = 0x07,
 }
 
 impl CommandError {
@@ -91,28 +93,94 @@ impl CommandError {
                 result.extend_from_slice(&error_bytes);
                 return result;
             }
+            CommandError::ParseCommandErrorToStringError => {
+                vec![CommandErrorPrefix::ParseCommandErrorToStringError as u8]
+            }
         }
     }
 
-    pub fn parse(data: &[u8]) -> Result<(Self, usize), CommandError> {
-        unimplemented!();
+    pub fn parse_to_string(data: &[u8]) -> Result<(String, usize), CommandError> {
+        let mut position = 0;
+        let prefix = data[position];
+        position += 1;
+
+        if prefix == CommandErrorPrefix::InvalidPrefix as u8 {
+            let error_string = "CommandError::InvalidPrefix".to_string();
+            Ok((error_string, position))
+        } else if prefix == CommandErrorPrefix::ParseCommandErrorToStringError as u8 {
+            let error_string = "CommandErrorPrefix::ParseCommandErrorToStringError".to_string();
+            Ok((error_string, position))
+        } else {
+            let (error_bytes_length, offset) = varint_decode(&data[position..])?;
+            position += offset;
+
+            let error_string_bytes =
+                data[position..position + error_bytes_length as usize].to_vec();
+            let error_string = String::from_utf8(error_string_bytes)?;
+            position += error_bytes_length as usize;
+
+            Ok((error_string, position))
+        }
     }
 }
 
 impl fmt::Display for CommandError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
-        // match self {
-        //     CommandError::GroupingErr(error) => {
-        //         let error_string = error.to_string();
-        //         write!(f, "{}::{}", "CommandError::GroupingErr".to_string(), error_string)
-        //     }
-        //     CommandError::UnitContentErr(error),
-        //     CommandError::InvalidPrefix,
-        //     CommandError::SelectConditionErr(error),
-        //     CommandError::UnitKeyError(error),
-        //     CommandError::VarIntError(error),
-        // }
+        match self {
+            CommandError::GroupingErr(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "CommandError::GroupingErr".to_string(),
+                    error_string
+                )
+            }
+            CommandError::UnitContentErr(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "CommandError::UnitContentErr".to_string(),
+                    error_string
+                )
+            }
+            CommandError::InvalidPrefix => {
+                write!(f, "{}", "CommandError::InvalidPrefix".to_string())
+            }
+            CommandError::SelectConditionErr(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "CommandError::SelectConditionErr".to_string(),
+                    error_string
+                )
+            }
+            CommandError::UnitKeyError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "CommandError::UnitKeyError".to_string(),
+                    error_string
+                )
+            }
+            CommandError::VarIntError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "CommandError::VarIntError".to_string(),
+                    error_string
+                )
+            }
+            CommandError::ParseCommandErrorToStringError => write!(
+                f,
+                "{}",
+                "CommandError::ParseCommandErrorToStringError".to_string()
+            ),
+        }
     }
 }
 
@@ -146,6 +214,12 @@ impl From<VarIntError> for CommandError {
     }
 }
 
+impl From<FromUtf8Error> for CommandError {
+    fn from(_err: FromUtf8Error) -> CommandError {
+        CommandError::ParseCommandErrorToStringError
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum SelectCondition {
     Key(GroupingLabel, UnitKey, Option<TransactionId>),
@@ -174,7 +248,25 @@ pub enum SelectConditionError {
 
 impl fmt::Display for SelectConditionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
+        match self {
+            SelectConditionError::InvalidPrefix => write!(f, "{}", "SelectConditionError::InvalidPrefix".to_string()),
+            SelectConditionError::UnitKeyError(error) => {
+                let error_string = error.to_string();
+                write!(f, "{}::{}", "SelectConditionError::UnitKeyError".to_string(), error_string)
+            }
+            SelectConditionError::FromUtf8Error(error) => {
+                let error_string = error.to_string();
+                write!(f, "{}::{}", "SelectConditionError::FromUtf8Error".to_string(), error_string)
+            }
+            SelectConditionError::PredicateError(error) => {
+                let error_string = error.to_string();
+                write!(f, "{}::{}", "SelectConditionError::PredicateError".to_string(), error_string)
+            }
+            SelectConditionError::GroupingError(error) => {
+                let error_string = error.to_string();
+                write!(f, "{}::{}", "SelectConditionError::GroupingError".to_string(), error_string)
+            }
+        }
     }
 }
 

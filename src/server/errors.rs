@@ -203,9 +203,8 @@ impl ServerError {
 
             return Ok((error_string, position));
         } else if prefix == ServerErrorPrefix::CommandError as u8 {
-            let (error, offset) = CommandError::parse(&data[position..])?;
+            let (error_string, offset) = CommandError::parse_to_string(&data[position..])?;
             position += offset;
-            let error_string = format!("{}", ServerError::CommandError(error));
             return Ok((error_string, position));
         } else if prefix == ServerErrorPrefix::ThreadError as u8 {
             let error_string = format!("{}", ServerError::ThreadError);
