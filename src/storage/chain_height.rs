@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::utils::varint::varint_encode;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -7,6 +9,21 @@ pub struct ChainHeight(u64);
 pub enum ChainHeightError {
     NegativeChainHeight,
     ChainHeightOutOfRange,
+}
+
+impl fmt::Display for ChainHeightError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ChainHeightError::NegativeChainHeight => {
+                write!(f, "{}", "ChainHeightError::NegativeChainHeight".to_string())
+            }
+            ChainHeightError::ChainHeightOutOfRange => write!(
+                f,
+                "{}",
+                "ChainHeightError::ChainHeightOutOfRange".to_string()
+            ),
+        }
+    }
 }
 
 impl ChainHeight {

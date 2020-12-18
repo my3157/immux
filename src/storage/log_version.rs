@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::fmt::Formatter;
+use std::fmt;
 use std::num::ParseIntError;
 
 #[derive(Debug, Clone, Copy)]
@@ -81,7 +81,7 @@ impl PartialEq for LogVersion {
 }
 
 impl std::fmt::Display for LogVersion {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}.{}.{}", self.major, self.minor, self.revise)
     }
 }
@@ -92,6 +92,15 @@ pub enum LogVersionError {
     InvalidString,
     ParseIntError(ParseIntError),
     UnexpectedLogVersion,
+}
+
+impl fmt::Display for LogVersionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+        // match self {
+        //
+        // }
+    }
 }
 
 impl From<ParseIntError> for LogVersionError {

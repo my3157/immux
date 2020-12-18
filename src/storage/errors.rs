@@ -1,6 +1,6 @@
+use std::fmt;
 use std::io::Error;
 use std::num::ParseIntError;
-use std::fmt;
 
 use crate::storage::chain_height::ChainHeightError;
 use crate::storage::instruction::InstructionError;
@@ -21,7 +21,66 @@ pub enum KVError {
 
 impl fmt::Display for KVError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
+        match self {
+            KVError::IOError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "VarIntError::UnexpectedFormat".to_string(),
+                    error_string
+                )
+            }
+            KVError::InstructionError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "KVError::InstructionError".to_string(),
+                    error_string
+                )
+            }
+            KVError::RevertOutOfRange => write!(f, "{}", "KVError::RevertOutOfRange".to_string()),
+            KVError::ParseIntError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "KVError::ParseIntError".to_string(),
+                    error_string
+                )
+            }
+            KVError::ChainHeightError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "KVError::ChainHeightError".to_string(),
+                    error_string
+                )
+            }
+            KVError::PointToUnexpectedInstruction => {
+                write!(f, "{}", "KVError::PointToUnexpectedInstruction".to_string())
+            }
+            KVError::TransactionManagerError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "KVError::TransactionManagerError".to_string(),
+                    error_string
+                )
+            }
+            KVError::LogVersionError(error) => {
+                let error_string = error.to_string();
+                write!(
+                    f,
+                    "{}::{}",
+                    "KVError::LogVersionError".to_string(),
+                    error_string
+                )
+            }
+        }
     }
 }
 

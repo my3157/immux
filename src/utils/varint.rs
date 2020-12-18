@@ -18,7 +18,11 @@ pub enum VarIntError {
 
 impl fmt::Display for VarIntError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        unimplemented!();
+        match self {
+            VarIntError::UnexpectedFormat => {
+                write!(f, "{}", "VarIntError::UnexpectedFormat".to_string())
+            }
+        }
     }
 }
 

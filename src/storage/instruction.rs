@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::constants::{INSTRUCTION_PACK_MAGIC, INSTRUCTION_PACK_VERSION};
 use crate::storage::chain_height::ChainHeight;
 use crate::storage::ecc::{
@@ -20,6 +22,15 @@ pub enum InstructionError {
     UnexpectedPackVersion(u8),
     ErrorCorrection(ErrorCorrectionError),
     UnexpectedECCMode(u8),
+}
+
+impl fmt::Display for InstructionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+        // match self {
+        //
+        // }
+    }
 }
 
 impl From<VarIntError> for InstructionError {

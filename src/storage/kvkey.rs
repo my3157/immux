@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::storage::executor::grouping_label::GroupingLabel;
 use crate::storage::executor::unit_key::UnitKey;
 use crate::utils::varint::{varint_decode, varint_encode, VarIntError};
@@ -5,6 +7,12 @@ use crate::utils::varint::{varint_decode, varint_encode, VarIntError};
 #[derive(Debug)]
 pub enum KVKeyError {
     VarIntError(VarIntError),
+}
+
+impl fmt::Display for KVKeyError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+    }
 }
 
 impl From<VarIntError> for KVKeyError {

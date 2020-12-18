@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 
 use crate::constants as Constants;
 use crate::storage::kvkey::KVKey;
@@ -36,6 +37,15 @@ impl TransactionId {
 pub enum TransactionManagerError {
     TransactionIdOutOfRange,
     TransactionNotAlive,
+}
+
+impl fmt::Display for TransactionManagerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+        // match self {
+        //
+        // }
+    }
 }
 
 #[derive(Debug, Clone)]
