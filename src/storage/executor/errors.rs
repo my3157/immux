@@ -18,9 +18,39 @@ pub enum ExecutorError {
     UnexpectedOutcome,
 }
 
+#[derive(Debug)]
+pub enum ExecutorErrorPrefix {
+    KVError = 0x01,
+    UnitContentError = 0x02,
+    ParseIntError = 0x03,
+    CommandError = 0x04,
+    PredicateError = 0x05,
+    KVKeyError = 0x06,
+    UnexpectedOutcome = 0x07,
+}
+
 impl ExecutorError {
     pub fn marshal(&self) -> Vec<u8> {
-        unimplemented!();
+        match self {
+            ExecutorError::KVError(error) => {
+                let mut result = vec![ExecutorErrorPrefix::KVError as u8];
+
+
+                let error_bytes = error.to_string().as_bytes().to_vec();
+                let error_bytes_length = error_bytes.len();
+                let length_bytes = varint_encode(error_bytes_length as u64);
+
+                result.extend_from_slice(&length_bytes);
+                result.extend_from_slice(&error_bytes);
+                return result;
+            },
+            ExecutorError::UnitContentError(error) => unimplemented!(),
+            ExecutorError::ParseIntError(error) => unimplemented!(),
+            ExecutorError::CommandError(error) => unimplemented!(),
+            ExecutorError::PredicateError(error) => unimplemented!(),
+            ExecutorError::KVKeyError(error) => unimplemented!(),
+            ExecutorError::UnexpectedOutcome => unimplemented!(),
+        }
     }
 
     pub fn parse(data: &[u8]) -> Result<(Self, usize), ExecutorError> {

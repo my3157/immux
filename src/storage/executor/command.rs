@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
-use std::string::FromUtf8Error;
 use std::fmt;
+use std::string::FromUtf8Error;
 
 use crate::storage::chain_height::ChainHeight;
 use crate::storage::executor::grouping_label::{GroupingLabel, GroupingLabelError};

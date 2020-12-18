@@ -1,5 +1,6 @@
 use std::io::Error;
 use std::num::ParseIntError;
+use std::fmt;
 
 use crate::storage::chain_height::ChainHeightError;
 use crate::storage::instruction::InstructionError;
@@ -16,6 +17,12 @@ pub enum KVError {
     PointToUnexpectedInstruction,
     TransactionManagerError(TransactionManagerError),
     LogVersionError(LogVersionError),
+}
+
+impl fmt::Display for KVError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+    }
 }
 
 impl From<Error> for KVError {

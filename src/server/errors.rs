@@ -1,13 +1,13 @@
+use std::fmt;
 use std::io::Error;
 use std::num::ParseIntError;
-use std::sync::mpsc::{RecvError, SendError};
 use std::string::FromUtf8Error;
-use std::fmt;
+use std::sync::mpsc::{RecvError, SendError};
 
 use crate::storage::executor::command::CommandError;
 use crate::storage::executor::errors::ExecutorError;
 use crate::storage::executor::predicate::PredicateError;
-use crate::utils::varint::{varint_encode, varint_decode, VarIntError};
+use crate::utils::varint::{varint_decode, varint_encode, VarIntError};
 
 #[derive(Debug)]
 pub enum ServerError {
@@ -76,7 +76,7 @@ impl ServerError {
                 result.extend_from_slice(&length_bytes);
                 result.extend_from_slice(&error_bytes);
                 return result;
-            },
+            }
             ServerError::HttpResponseError(error) => {
                 let mut result = vec![ServerErrorPrefix::HttpResponseError as u8];
                 let error_bytes = format!("{}", error).as_bytes().to_vec();
@@ -86,7 +86,7 @@ impl ServerError {
                 result.extend_from_slice(&length_bytes);
                 result.extend_from_slice(&error_bytes);
                 return result;
-            },
+            }
             ServerError::PredicateError(predicate_error) => {
                 let mut result = vec![ServerErrorPrefix::PredicateError as u8];
                 let error_bytes = predicate_error.marshal();
@@ -121,7 +121,9 @@ impl ServerError {
                 return result;
             }
             ServerError::ThreadError => vec![ServerErrorPrefix::ThreadError as u8],
-            ServerError::ParseServerErrorToStringError => vec![ServerErrorPrefix::ParseServerErrorToStringError as u8],
+            ServerError::ParseServerErrorToStringError => {
+                vec![ServerErrorPrefix::ParseServerErrorToStringError as u8]
+            }
         }
     }
 
@@ -136,13 +138,14 @@ impl ServerError {
         } else if prefix == ServerErrorPrefix::ExecutorError as u8 {
             let (error, offset) = ExecutorError::parse(&data[position..])?;
             position += offset;
-            let error_string = format!("{}",error);
+            let error_string = format!("{}", error);
             return Ok((error_string, position));
         } else if prefix == ServerErrorPrefix::BodyExtractionError as u8 {
             let (error_bytes_length, offset) = varint_decode(&data[position..])?;
             position += offset;
 
-            let error_string_bytes = data[position..position + error_bytes_length as usize].to_vec();
+            let error_string_bytes =
+                data[position..position + error_bytes_length as usize].to_vec();
             let error_string = String::from_utf8(error_string_bytes)?;
             position += error_bytes_length as usize;
 
@@ -157,7 +160,8 @@ impl ServerError {
             let (error_bytes_length, offset) = varint_decode(&data[position..])?;
             position += offset;
 
-            let error_string_bytes = data[position..position + error_bytes_length as usize].to_vec();
+            let error_string_bytes =
+                data[position..position + error_bytes_length as usize].to_vec();
             let error_string = String::from_utf8(error_string_bytes)?;
             position += error_bytes_length as usize;
 
@@ -166,16 +170,16 @@ impl ServerError {
             let (error_bytes_length, offset) = varint_decode(&data[position..])?;
             position += offset;
 
-            let error_string_bytes = data[position..position + error_bytes_length as usize].to_vec();
+            let error_string_bytes =
+                data[position..position + error_bytes_length as usize].to_vec();
             let error_string = String::from_utf8(error_string_bytes)?;
             position += error_bytes_length as usize;
 
             return Ok((error_string, position));
         } else if prefix == ServerErrorPrefix::PredicateError as u8 {
-            let (error, offset) = PredicateError::parse(&data[position..])?;
+            let (error, offset) = PredicateError::parse_to_string(&data[position..])?;
             position += offset;
-            let error_string = format!("{}",error);
-            return Ok((error_string, position));
+            return Ok((error, position));
         } else if prefix == ServerErrorPrefix::SenderError as u8 {
             let error_string = format!("{}", ServerError::SenderError);
             return Ok((error_string, position));
@@ -183,7 +187,8 @@ impl ServerError {
             let (error_bytes_length, offset) = varint_decode(&data[position..])?;
             position += offset;
 
-            let error_string_bytes = data[position..position + error_bytes_length as usize].to_vec();
+            let error_string_bytes =
+                data[position..position + error_bytes_length as usize].to_vec();
             let error_string = String::from_utf8(error_string_bytes)?;
             position += error_bytes_length as usize;
 
@@ -192,7 +197,8 @@ impl ServerError {
             let (error_bytes_length, offset) = varint_decode(&data[position..])?;
             position += offset;
 
-            let error_string_bytes = data[position..position + error_bytes_length as usize].to_vec();
+            let error_string_bytes =
+                data[position..position + error_bytes_length as usize].to_vec();
             let error_string = String::from_utf8(error_string_bytes)?;
             position += error_bytes_length as usize;
 
@@ -200,7 +206,7 @@ impl ServerError {
         } else if prefix == ServerErrorPrefix::CommandError as u8 {
             let (error, offset) = CommandError::parse(&data[position..])?;
             position += offset;
-            let error_string = format!("{}",ServerError::CommandError(error));
+            let error_string = format!("{}", ServerError::CommandError(error));
             return Ok((error_string, position));
         } else if prefix == ServerErrorPrefix::ThreadError as u8 {
             let error_string = format!("{}", ServerError::ThreadError);
@@ -272,41 +278,89 @@ impl fmt::Display for ServerError {
             ServerError::TinyHTTPError => write!(f, "{}", "ServerError::TinyHTTPError".to_string()),
             ServerError::ExecutorError(executor_error) => {
                 let executor_error_str = format!("{}", executor_error);
-                write!(f, "{}::{}", "ServerError::ExecutorError".to_string(), executor_error_str)
-            },
+                write!(
+                    f,
+                    "{}::{}",
+                    "ServerError::ExecutorError".to_string(),
+                    executor_error_str
+                )
+            }
             ServerError::BodyExtractionError(error) => {
                 let error_str = error.to_string();
-                write!(f, "{}::{}", "ServerError::ExecutorError".to_string(), error_str)
+                write!(
+                    f,
+                    "{}::{}",
+                    "ServerError::ExecutorError".to_string(),
+                    error_str
+                )
             }
-            ServerError::UrlParsingError => write!(f, "{}", "ServerError::UrlParsingError".to_string()),
-            ServerError::BodyParsingError => write!(f, "{}", "ServerError::BodyParsingError".to_string()),
+            ServerError::UrlParsingError => {
+                write!(f, "{}", "ServerError::UrlParsingError".to_string())
+            }
+            ServerError::BodyParsingError => {
+                write!(f, "{}", "ServerError::BodyParsingError".to_string())
+            }
             ServerError::ParseIntError(error) => {
                 let error_str = error.to_string();
-                write!(f, "{}::{}", "ServerError::ExecutorError".to_string(), error_str)
-            },
+                write!(
+                    f,
+                    "{}::{}",
+                    "ServerError::ExecutorError".to_string(),
+                    error_str
+                )
+            }
             ServerError::HttpResponseError(error) => {
                 let error_str = error.to_string();
-                write!(f, "{}::{}", "ServerError::ExecutorError".to_string(), error_str)
-            },
+                write!(
+                    f,
+                    "{}::{}",
+                    "ServerError::ExecutorError".to_string(),
+                    error_str
+                )
+            }
             ServerError::PredicateError(predicate_error) => {
                 let predicate_error_str = format!("{}", predicate_error);
-                write!(f, "{}::{}", "ServerError::ExecutorError".to_string(), predicate_error_str)
+                write!(
+                    f,
+                    "{}::{}",
+                    "ServerError::ExecutorError".to_string(),
+                    predicate_error_str
+                )
             }
             ServerError::SenderError => write!(f, "{}", "ServerError::SenderError".to_string()),
             ServerError::ReceiverError(error) => {
                 let error_str = error.to_string();
-                write!(f, "{}::{}", "ServerError::ExecutorError".to_string(), error_str)
+                write!(
+                    f,
+                    "{}::{}",
+                    "ServerError::ExecutorError".to_string(),
+                    error_str
+                )
             }
             ServerError::TCPServerError(error) => {
                 let error_str = error.to_string();
-                write!(f, "{}::{}", "ServerError::ExecutorError".to_string(), error_str)
+                write!(
+                    f,
+                    "{}::{}",
+                    "ServerError::ExecutorError".to_string(),
+                    error_str
+                )
             }
             ServerError::CommandError(error) => {
                 let command_error_str = format!("{}", error);
-                write!(f, "{}::{}", "ServerError::ExecutorError".to_string(), command_error_str)
+                write!(
+                    f,
+                    "{}::{}",
+                    "ServerError::ExecutorError".to_string(),
+                    command_error_str
+                )
             }
             ServerError::ThreadError => write!(f, "{}", "ServerError::ThreadError".to_string()),
-            ServerError::ParseServerErrorToStringError => write!(f, "{}", "ServerError::ParseServerErrorToStringError".to_string()),
+            ServerError::ParseServerErrorToStringError => write!(
+                f,
+                "{}",
+                "ServerError::ParseServerErrorToStringError".to_string()
+            ),
         }
     }
 }

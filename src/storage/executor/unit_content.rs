@@ -55,6 +55,12 @@ pub enum UnitContentError {
     UnexpectedLengthBytes,
 }
 
+impl fmt::Display for UnitContentError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+    }
+}
+
 impl PartialOrd for UnitContent {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if let UnitContent::Float64(f1) = self {

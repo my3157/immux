@@ -2,6 +2,7 @@ use crate::utils::ints::{
     u16_to_u8_array, u32_to_u8_array, u64_to_u8_array, u8_array_to_u16, u8_array_to_u32,
     u8_array_to_u64,
 };
+use std::fmt;
 
 /// Variable-length integer encoding, using simplistic Bitcoin's varint design:
 /// https://bitcointalk.org/index.php?topic=32849.msg410480#msg410480
@@ -13,6 +14,12 @@ const VARINT_64BIT_PREFIX: u8 = 0xff;
 #[derive(Debug)]
 pub enum VarIntError {
     UnexpectedFormat,
+}
+
+impl fmt::Display for VarIntError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unimplemented!();
+    }
 }
 
 pub fn varint_decode(data: &[u8]) -> Result<(u64, usize), VarIntError> {
